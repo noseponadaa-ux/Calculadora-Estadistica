@@ -2,7 +2,7 @@
 
 // Función para ir a la calculadora
 function irACalculadora() {
-    window.location.href = 'index.html';
+    window.location.href = 'calculadora.html';
 }
 
 // Función para generar PDF de la teoría
