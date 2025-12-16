@@ -36,83 +36,183 @@
     <!-- 1️⃣ PANTALLA DE INICIO       -->
     <!-- ============================= -->
 
+    <!-- PANTALLA DE INICIO MEJORADA -->
     <section id="start-screen" class="start-screen">
-        <div class="start-content">
-            <h1>ESTADÍSTICA</h1>
-            <p>TEORÍA • EJEMPLOS </p>
-            <p>DESARROLLADO POR: CRISTOFER CARLOS RIMAC REQUELME</p>
-            <p>PROFESOR: TERRONES GALVEZ EDWARD IVAN</p>
-            <button id="btnStart" class="btn-1">Empezar</button>
+        <div class="hero-container">
+            <div class="hero-badge">
+                <span class="badge-icon">📊</span>
+                <span class="badge-text">Aprende Estadística</span>
+            </div>
+            
+            <h1 class="hero-title">
+                <span class="title-line">Domina la</span>
+                <span class="title-highlight">Estadística</span>
+            </h1>
+            
+            <p class="hero-subtitle">
+                Teoría completa • Ejemplos prácticos • Ejercicios resueltos
+            </p>
+            
+            <div class="hero-features">
+                <div class="feature-item">
+                    <span class="feature-icon">📚</span>
+                    <span>15 Temas</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">💡</span>
+                    <span>5 Módulos</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✨</span>
+                    <span>Interactivo</span>
+                </div>
+            </div>
+            
+            <button id="btnStart" class="btn-hero">
+                <span>Comenzar Ahora</span>
+                <span class="btn-arrow">→</span>
+            </button>
+            
+            <div class="hero-credits">
+                <p><strong>Desarrollado por:</strong> Cristofer Carlos Rimac Requelme</p>
+                <p><strong>Profesor:</strong> Terrones Galvez Edward Ivan</p>
+            </div>
         </div>
-
-        <img src="imagenes/estadistica.png" class="start-img" alt="">
+        
+        <div class="hero-decoration">
+            <div class="floating-shape shape-1"></div>
+            <div class="floating-shape shape-2"></div>
+            <div class="floating-shape shape-3"></div>
+        </div>
     </section>
-
-
     <!-- ============================= -->
-    <!-- 2️⃣ MENÚ DE TEMAS            -->
+    <!-- 2️⃣ MENÚ DE MÓDULOS Y TEMAS   -->
     <!-- ============================= -->
 
     <section id="topics-screen" class="hidden">
-        <h2 class="title-center">TEMAS</h2>
+        <h2 class="title-center">MÓDULOS DE ESTADÍSTICA</h2>
 
-        <div class="topics-container">
-
-            <div class="topic-card" onclick="openTopic('conceptos')">
-                <h3>Conceptos básicos de estadística</h3>
+        <!-- MÓDULO 1: FUNDAMENTOS -->
+        <div class="module-section">
+            <div class="module-header">
+                <div class="module-title-wrapper">
+                    <span class="module-icon">📊</span>
+                    <h3>MÓDULO 1: Fundamentos de Estadística</h3>
+                </div>
             </div>
-
-            <div class="topic-card" onclick="openTopic('variables')">
-                <h3>Tipos de Variables</h3>
+            <div class="topics-container">
+                <div class="topic-card" onclick="openTopic('conceptos')">
+                    <span class="topic-number">1.1</span>
+                    <h3>Conceptos básicos de estadística</h3>
+                </div>
+                <div class="topic-card" onclick="openTopic('variables')">
+                    <span class="topic-number">1.2</span>
+                    <h3>Tipos de Variables</h3>
+                </div>
+                <div class="topic-card" onclick="openTopic('frecuencias')">
+                    <span class="topic-number">1.3</span>
+                    <h3>Tablas de Frecuencia</h3>
+                </div>
+                <div class="topic-card" onclick="openTopic('graficos')">
+                    <span class="topic-number">1.4</span>
+                    <h3>Representación gráfica</h3>
+                </div>
             </div>
-
-            <div class="topic-card" onclick="openTopic('frecuencias')">
-                <h3>Tablas de Frecuencia</h3>
-            </div>
-            <div class="topic-card" onclick="openTopic('graficos')">
-                <h3>Representación grafica</h3>
-            </div>
-            <div class="topic-card" onclick="openTopic('posicion')">
-                <h3>Medidas de posición</h3>
-            </div>
-            <div class="topic-card" onclick="openTopic('tendencia')">
-                <h3>Medidas de tendencia central</h3>
-            </div>
-            <div class="topic-card" onclick="openTopic('dispersion')">
-                <h3>Medidas de dispersión</h3>
-            </div>
-            <div class="topic-card" onclick="openTopic('forma')">
-                <h3>Medidas de forma</h3>
-            </div>
-            <div class="topic-card" onclick="openTopic('simple')">
-                <h3>Regresión lineal simple</h3>
-            </div>
-            <div class="topic-card" onclick="openTopic('multiple')">
-                <h3>Regresión lineal múltiple</h3>
-            </div>
-            <div class="topic-card" onclick="openTopic('probabilidad')">
-                <h3>Probabilidad</h3>
-            </div>
-            <div class="topic-card" onclick="openTopic('ic')">
-                <h3>Intervalo de confianza</h3>
-            </div>
-            <div class="topic-card" onclick="openTopic('hipotesis')">
-                <h3>Prueba de hipótesis</h3>
-            </div>
-            <div class="topic-card" onclick="openTopic('chiCuadrado')">
-                <h3>Pruebas No paramétricas: Chi cuadrado</h3>
-            </div>
-            <div class="topic-card" onclick="openTopic('wilcoxon')">
-                <h3>Pruebas No paramétricas</h3>
-            </div>
-            <div class="topic-card" onclick="openTopic('materiales')">
-                <h3>Material de estudio</h3>
-            </div>
-
         </div>
+
+        <!-- MÓDULO 2: MEDIDAS DESCRIPTIVAS -->
+        <div class="module-section">
+            <div class="module-header">
+                <div class="module-title-wrapper">
+                    <span class="module-icon">📐</span>
+                    <h3>MÓDULO 2: Medidas Descriptivas</h3>
+                </div>
+            </div>
+            <div class="topics-container">
+                <div class="topic-card" onclick="openTopic('posicion')">
+                    <span class="topic-number">2.1</span>
+                    <h3>Medidas de posición</h3>
+                </div>
+                <div class="topic-card" onclick="openTopic('tendencia')">
+                    <span class="topic-number">2.2</span>
+                    <h3>Medidas de tendencia central</h3>
+                </div>
+                <div class="topic-card" onclick="openTopic('dispersion')">
+                    <span class="topic-number">2.3</span>
+                    <h3>Medidas de dispersión</h3>
+                </div>
+                <div class="topic-card" onclick="openTopic('forma')">
+                    <span class="topic-number">2.4</span>
+                    <h3>Medidas de forma</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- MÓDULO 3: REGRESIÓN Y CORRELACIÓN -->
+        <div class="module-section">
+            <div class="module-header">
+                <div class="module-title-wrapper">
+                    <span class="module-icon">📈</span>
+                    <h3>MÓDULO 3: Regresión y Correlación</h3>
+                </div>
+            </div>
+            <div class="topics-container">
+                <div class="topic-card" onclick="openTopic('simple')">
+                    <span class="topic-number">3.1</span>
+                    <h3>Regresión lineal simple</h3>
+                </div>
+                <div class="topic-card" onclick="openTopic('multiple')">
+                    <span class="topic-number">3.2</span>
+                    <h3>Regresión lineal múltiple</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- MÓDULO 4: PROBABILIDAD E INFERENCIA -->
+        <div class="module-section">
+            <div class="module-header">
+                <div class="module-title-wrapper">
+                    <span class="module-icon">🎲</span>
+                    <h3>MÓDULO 4: Probabilidad e Inferencia</h3>
+                </div>
+            </div>
+            <div class="topics-container">
+                <div class="topic-card" onclick="openTopic('probabilidad')">
+                    <span class="topic-number">4.1</span>
+                    <h3>Probabilidad</h3>
+                </div>
+                <div class="topic-card" onclick="openTopic('ic')">
+                    <span class="topic-number">4.2</span>
+                    <h3>Intervalo de confianza</h3>
+                </div>
+                <div class="topic-card" onclick="openTopic('hipotesis')">
+                    <span class="topic-number">4.3</span>
+                    <h3>Prueba de hipótesis</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- MÓDULO 5: PRUEBAS NO PARAMÉTRICAS -->
+        <div class="module-section">
+            <div class="module-header">
+                <div class="module-title-wrapper">
+                    <span class="module-icon">🔬</span>
+                    <h3>MÓDULO 5: Pruebas No Paramétricas</h3>
+                </div>
+            </div>
+            <div class="topics-container">
+                <div class="topic-card" onclick="openTopic('chiCuadrado')">
+                    <span class="topic-number">5.1</span>
+                    <h3>Chi cuadrado</h3>
+                </div>
+                <div class="topic-card" onclick="openTopic('wilcoxon')">
+                    <span class="topic-number">5.2</span>
+                    <h3>U Mann-Whitney / Wilcoxon</h3>
+                </div>
+            </div>
+        </div>
+
     </section>
-
-
     <!-- ============================= -->
     <!-- 3️⃣ CONTENIDO DE CADA TEMA   -->
     <!-- ============================= -->
@@ -3420,81 +3520,7 @@
                 </div>
                 `;
             }
-            if (id === "materiales") {
-                html = `
-                <h2>📂 Materiales de apoyo</h2>
-
-                <p>Descarga los archivos en formato PDF o PPTX:</p>
-
-                <div style="display: flex; flex-direction: column; gap: 20px; margin-top: 20px;">
-                    <h1>SEMANA 1 : Conceptos básicos de la estadistica</h1>
-                    <a href="materiales/S01CONCEPTOSBASICOS.pptx" download 
-                    style="background: #2196f3; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none;">
-                    📄 Descargar ppt
-                    </a>
-                    <h1>SEMANA 2 : Tipos de variables</h1>
-                    <a href="materiales/S2TIPOSDEVARIABLES.pptx" download 
-                    style="background: #2196f3; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none;">
-                    📄 Descargar ppt
-                    </a>
-                    <h1>SEMANA 3-4 : Tablas de frecuencias</h1>
-                    <a href="materiales/S34TABLASDEFRECUENCIAS.pptx" download 
-                    style="background: #2196f3; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none;">
-                    📄 Descargar ppt
-                    </a>
-                    <h1>SEMANA 5 : Medidas de posición</h1>
-                    <a href="materiales/S5MEDIDASDEPOSICION.pptx" download 
-                    style="background: #2196f3; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none;">
-                    📄 Descargar ppt
-                    </a>
-                    <h1>SEMANA 6-7 : Medidas de dispersión y de forma</h1>
-                    <a href="materiales/S67MEDIDASDEDISPERSIONYDEFORMA.pptx" download 
-                    style="background: #2196f3; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none;">
-                    📄 Descargar ppt
-                    </a>
-                    <h1>SEMANA 9 : Asociación de variables</h1>
-                    <a href="materiales/S09-ASOCIACIONDEVARIABLES.pdf" download 
-                    style="background: #2196f3; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none;">
-                    📄 Descargar pdf
-                    </a>
-                    <h1>SEMANA 9-10 : Intervalo de confianza</h1>
-                    <a href="materiales/S09-S09-10-I. CONF. PARA UNA MEDIA-UNA PROPORC..pptx" download 
-                    style="background: #2196f3; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none;">
-                    📄 Descargar ppt
-                    </a>
-                    <a href="materiales/S09-10-I._CONF._PARA_UNA_MEDIA-UNA_PROPORCION..pptx" download 
-                    style="background: #2196f3; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none;">
-                    📄 Descargar ppt
-                    </a>
-                    <p>Tabla T student</p>
-                    <a href="materiales/TABLA T STUDENT.pdf" download 
-                    style="background: #2196f3; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none;">
-                    📄 Descargar pdf
-                    </a>
-                    <p>Tabla Z normal</p>
-                    <a href="materiales/TABLA Z NORMAL.pdf" download 
-                    style="background: #2196f3; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none;">
-                    📄 Descargar pdf
-                    </a>
-                    <h1>SEMANA 10 : Probabilidad regla de la place</h1>
-                    <a href="materiales/S10-PROBABILIDADREGLADELAPLACE.pdf" download 
-                    style="background: #2196f3; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none;">
-                    📄 Descargar pdf
-                    </a>
-                    <h1>SEMANA 10-1 : Probabilidad condicional regla de bayes</h1>
-                    <a href="materiales/S10.1-PROBABILIDADCONDICIONALREGLADEBAYES.pdf" download 
-                    style="background: #2196f3; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none;">
-                    📄 Descargar pdf
-                    </a>
-                    <p>Ejercicios de probabilidad</p>
-                    <a href="materiales/MATERIAL EJERCICIOS PROBABILIDAD.pdf" download 
-                    style="background: #2196f3; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none;">
-                    📄 Descargar pdf
-                    </a>
-                </div>
-                `;
-            }
-
+            
 
             topicContent.innerHTML = html;
             

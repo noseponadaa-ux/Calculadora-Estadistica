@@ -253,8 +253,27 @@ function cargarEjemplo(seccion) {
             break;
             
         case 'regresion-multiple':
-            document.getElementById('multiple-x').value = '10 5\n12 6\n15 8\n18 9\n20 10';
-            document.getElementById('multiple-y').value = '100, 120, 145, 165, 180';
+            // Cargar ejemplo en la tabla
+            const ejemploX = [[10, 5], [12, 6], [15, 8], [18, 9], [20, 10]];
+            const ejemploY = [100, 120, 145, 165, 180];
+            
+            // Asegurarse de que haya suficientes filas
+            const tbody = document.getElementById('tabla-multiple-body');
+            while (tbody.children.length < ejemploX.length) {
+                agregarFilaMultiple();
+            }
+            
+            // Llenar la tabla
+            const filas = tbody.querySelectorAll('tr');
+            ejemploX.forEach((fila, i) => {
+                fila.forEach((valor, j) => {
+                    const input = filas[i].querySelector(`.x-col-${j+1}`);
+                    if (input) input.value = valor;
+                });
+                const yInput = filas[i].querySelector('.y-col');
+                if (yInput) yInput.value = ejemploY[i];
+            });
+            
             mostrarToast('Ejemplo cargado: Ventas según publicidad y precio', 'success');
             break;
             
@@ -419,6 +438,98 @@ function exportarResultadosExcel(datos, nombreArchivo) {
         console.error('Error al exportar:', error);
         mostrarToast('Error al exportar a Excel', 'error');
     }
+}
+
+function exportarRegresionMultiple() {
+    if (!window.datosRegresionMultiple) {
+        mostrarToast('No hay datos para exportar', 'error');
+        return;
+    }
+    
+    const { X, y, coeficientes, r2 } = window.datosRegresionMultiple;
+    const numVars = X[0].length;
+    
+    const datos = X.map((fila, i) => {
+        const obj = {};
+        fila.forEach((val, j) => {
+            obj[`X₍${j+1}₎`] = val;
+        });
+        obj['Y'] = y[i];
+        return obj;
+    });
+    
+    exportarResultadosExcel(datos, 'regresion_multiple');
+}
+
+function importarExcelMultiple() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx, .xls';
+    
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = (event) => {
+            try {
+                const data = new Uint8Array(event.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                
+                if (jsonData.length < 2) {
+                    throw new Error('El archivo debe tener al menos 2 filas (encabezado y datos)');
+                }
+                
+                // Detectar número de columnas X (todas excepto la última que es Y)
+                const numCols = jsonData[0].length;
+                const numVarsX = numCols - 1;
+                
+                if (numVarsX < 2 || numVarsX > 5) {
+                    throw new Error('El archivo debe tener entre 2 y 5 variables X más 1 columna Y');
+                }
+                
+                // Ajustar selector de variables
+                document.getElementById('num-variables').value = numVarsX;
+                generarTablaVariables();
+                
+                // Llenar tabla (saltar primera fila si es encabezado)
+                const tbody = document.getElementById('tabla-multiple-body');
+                const startRow = isNaN(jsonData[0][0]) ? 1 : 0; // Skip header if first cell is not a number
+                
+                // Asegurar suficientes filas
+                while (tbody.children.length < jsonData.length - startRow) {
+                    agregarFilaMultiple();
+                }
+                
+                const filas = tbody.querySelectorAll('tr');
+                for (let i = startRow; i < jsonData.length; i++) {
+                    const fila = jsonData[i];
+                    if (fila.length >= numCols) {
+                        const filaHTML = filas[i - startRow];
+                        
+                        // Llenar X
+                        for (let j = 0; j < numVarsX; j++) {
+                            const input = filaHTML.querySelector(`.x-col-${j+1}`);
+                            if (input) input.value = fila[j];
+                        }
+                        
+                        // Llenar Y
+                        const yInput = filaHTML.querySelector('.y-col');
+                        if (yInput) yInput.value = fila[numVarsX];
+                    }
+                }
+                
+                mostrarToast('Datos importados desde Excel', 'success');
+            } catch (error) {
+                mostrarToast('Error al importar: ' + error.message, 'error');
+            }
+        };
+        
+        reader.readAsArrayBuffer(file);
+    };
+    
+    input.click();
 }
 
 // ========== CAMBIAR FORMULARIO IC ==========
@@ -595,6 +706,7 @@ function crearGraficoRegresion(x, y, yPred, a, b) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: false,
             plugins: {
                 legend: {
                     labels: { color: textColor }
@@ -630,30 +742,50 @@ function calcularRegresionMultiple() {
     
     setTimeout(() => {
         try {
-            const xTexto = document.getElementById('multiple-x').value;
-            const yTexto = document.getElementById('multiple-y').value;
+            const numVars = parseInt(document.getElementById('num-variables').value);
             
-            // Parsear matriz X
-            const filas = xTexto.trim().split('\n');
+            // Leer datos de la tabla
             const X = [];
+            const y = [];
             
-            for (let fila of filas) {
-                const valores = fila.trim().split(/[\s,]+/).map(v => parseFloat(v.trim()));
-                if (valores.some(isNaN)) {
-                    throw new Error('La matriz X contiene valores no numéricos.');
+            const filas = document.querySelectorAll('#tabla-multiple-body tr');
+            
+            filas.forEach(fila => {
+                const xFila = [];
+                let yValor = null;
+                let filaCompleta = true;
+                
+                // Leer valores de X
+                for (let col = 1; col <= numVars; col++) {
+                    const input = fila.querySelector(`.x-col-${col}`);
+                    const valor = parseFloat(input.value);
+                    if (isNaN(valor) || input.value.trim() === '') {
+                        filaCompleta = false;
+                        break;
+                    }
+                    xFila.push(valor);
                 }
-                X.push(valores);
-            }
+                
+                // Leer valor de Y
+                const yInput = fila.querySelector('.y-col');
+                yValor = parseFloat(yInput.value);
+                if (isNaN(yValor) || yInput.value.trim() === '') {
+                    filaCompleta = false;
+                }
+                
+                // Solo agregar si la fila está completa
+                if (filaCompleta) {
+                    X.push(xFila);
+                    y.push(yValor);
+                }
+            });
             
             if (X.length === 0) {
-                throw new Error('La matriz X está vacía.');
+                throw new Error('Debes ingresar al menos un conjunto de datos completo.');
             }
             
-            // Parsear vector Y
-            const y = validarNumeros(yTexto, 'valores de Y');
-            
-            if (X.length !== y.length) {
-                throw new Error('La matriz X y el vector Y deben tener la misma cantidad de filas.');
+            if (X.length < numVars + 1) {
+                throw new Error(`Para ${numVars} variables necesitas al menos ${numVars + 1} observaciones.`);
             }
             
             // Agregar columna de unos para el intercepto
@@ -668,11 +800,17 @@ function calcularRegresionMultiple() {
             // Construir ecuación
             let ecuacion = `y = ${coeficientes[0].toFixed(4)}`;
             for (let i = 1; i < coeficientes.length; i++) {
-                ecuacion += ` ${coeficientes[i] >= 0 ? '+' : ''} ${coeficientes[i].toFixed(4)}X${i}`;
+                ecuacion += ` ${coeficientes[i] >= 0 ? '+' : ''} ${coeficientes[i].toFixed(4)}X₍${i}₎`;
             }
             
             let html = `
                 <h3><i class="fas fa-project-diagram"></i> Resultados de Regresión Múltiple</h3>
+                
+                <div class="step-box">
+                    <h4>Información del Modelo:</h4>
+                    <p><strong>Variables independientes:</strong> ${numVars}</p>
+                    <p><strong>Observaciones:</strong> ${X.length}</p>
+                </div>
                 
                 <div class="step-box">
                     <h4>Ecuación de Regresión:</h4>
@@ -685,7 +823,7 @@ function calcularRegresionMultiple() {
             `;
             
             for (let i = 1; i < coeficientes.length; i++) {
-                html += `<p><strong>β${i} (X${i}):</strong> ${coeficientes[i].toFixed(4)}</p>`;
+                html += `<p><strong>β₍${i}₎ (X₍${i}₎):</strong> ${coeficientes[i].toFixed(4)}</p>`;
             }
             
             html += `
@@ -701,10 +839,21 @@ function calcularRegresionMultiple() {
                     <button class="btn-secondary" onclick="copiarAlPortapapeles('${ecuacion}')">
                         <i class="fas fa-copy"></i> Copiar Ecuación
                     </button>
+                    <button class="btn-secondary" onclick="exportarRegresionMultiple()">
+                        <i class="fas fa-file-excel"></i> Exportar a Excel
+                    </button>
                 </div>
             `;
             
             document.getElementById('resultado-multiple').innerHTML = html;
+            
+            // Guardar para exportación
+            window.datosRegresionMultiple = {
+                X: X,
+                y: y,
+                coeficientes: coeficientes,
+                r2: r2
+            };
             
             agregarAlHistorial(
                 'Regresión Lineal Múltiple',
@@ -924,6 +1073,9 @@ function calcularBayes() {
     }
 }
 
+// Variable global para almacenar las clases de frecuencia
+let clasesGlobales = null;
+
 // ========== TABLA DE FRECUENCIAS ==========
 function calcularFrecuencias() {
     mostrarLoader();
@@ -1038,11 +1190,14 @@ function calcularFrecuencias() {
                 </table>
                 
                 <div style="margin-top: 20px; display: flex; gap: 10px;">
-                    <button class="btn-secondary" onclick="exportarTablaFrecuencias(${JSON.stringify(clases)})">
+                    <button class="btn-secondary" onclick="exportarTablaFrecuencias()">
                         <i class="fas fa-file-excel"></i> Exportar a Excel
                     </button>
                 </div>
             `;
+            
+            // Guardar clases en variable global para la exportación
+            clasesGlobales = clases;
             
             document.getElementById('resultado-frecuencias').innerHTML = html;
             
@@ -1068,8 +1223,13 @@ function calcularFrecuencias() {
     }, 100);
 }
 
-function exportarTablaFrecuencias(clases) {
-    const datos = clases.map((clase, i) => ({
+function exportarTablaFrecuencias() {
+    if (!clasesGlobales) {
+        mostrarToast('No hay datos para exportar', 'error');
+        return;
+    }
+    
+    const datos = clasesGlobales.map((clase, i) => ({
         'Clase': i + 1,
         'Límite Inferior': parseFloat(clase.limiteInf),
         'Límite Superior': parseFloat(clase.limiteSup),
@@ -1494,61 +1654,184 @@ function crearGraficoIntervalo(valor, limInf, limSup, titulo, confianza) {
     const textColor = theme === 'dark' ? '#f1f5f9' : '#0f172a';
     const gridColor = theme === 'dark' ? '#334155' : '#e2e8f0';
     
-    const margen = (limSup - limInf) * 0.3;
+    // Calcular la desviación estándar aproximada del intervalo
+    // Usamos z-scores para intervalos de confianza comunes
+    const zScores = {
+        90: 1.645,
+        95: 1.96,
+        99: 2.576
+    };
+    const z = zScores[confianza] || 1.96;
+    const desviacion = (limSup - valor) / z;
+    
+    // Generar puntos para la curva normal
+    const numPuntos = 200;
+    const rango = (limSup - limInf) * 1.5;
+    const inicio = valor - rango / 2;
+    const fin = valor + rango / 2;
+    const paso = (fin - inicio) / numPuntos;
+    
+    const puntosX = [];
+    const puntosY = [];
+    const puntosArea = [];
+    
+    for (let i = 0; i <= numPuntos; i++) {
+        const x = inicio + i * paso;
+        puntosX.push(x);
+        
+        // Fórmula de distribución normal
+        const exponente = -Math.pow(x - valor, 2) / (2 * Math.pow(desviacion, 2));
+        const y = (1 / (desviacion * Math.sqrt(2 * Math.PI))) * Math.exp(exponente);
+        puntosY.push(y);
+        
+        // Puntos del área sombreada (1-α)
+        if (x >= limInf && x <= limSup) {
+            puntosArea.push({ x, y });
+        }
+    }
     
     chartInstances['graficoIntervalos'] = new Chart(ctx, {
-        type: 'bar',
+        type: 'line',
         data: {
-            labels: [titulo],
-            datasets: [{
-                label: 'Límite Inferior',
-                data: [limInf],
-                backgroundColor: 'rgba(239, 68, 68, 0.5)',
-                borderColor: 'rgba(239, 68, 68, 1)',
-                borderWidth: 2
-            }, {
-                label: 'Valor Estimado',
-                data: [valor],
-                backgroundColor: 'rgba(99, 102, 241, 0.8)',
-                borderColor: 'rgba(99, 102, 241, 1)',
-                borderWidth: 2
-            }, {
-                label: 'Límite Superior',
-                data: [limSup],
-                backgroundColor: 'rgba(16, 185, 129, 0.5)',
-                borderColor: 'rgba(16, 185, 129, 1)',
-                borderWidth: 2
-            }]
+            labels: puntosX,
+            datasets: [
+                {
+                    label: 'Distribución Normal',
+                    data: puntosY,
+                    borderColor: 'rgba(99, 102, 241, 1)',
+                    backgroundColor: 'rgba(99, 102, 241, 0.05)',
+                    borderWidth: 2,
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0.4
+                },
+                {
+                    label: `Área de Confianza (${confianza}%)`,
+                    data: puntosX.map((x, i) => {
+                        return (x >= limInf && x <= limSup) ? puntosY[i] : null;
+                    }),
+                    borderColor: 'rgba(6, 182, 212, 1)',
+                    backgroundColor: 'rgba(6, 182, 212, 0.3)',
+                    borderWidth: 0,
+                    fill: true,
+                    pointRadius: 0,
+                    tension: 0.4,
+                    spanGaps: false
+                }
+            ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
             plugins: {
                 legend: {
                     labels: { color: textColor }
                 },
                 title: {
                     display: true,
-                    text: `Intervalo de Confianza al ${confianza}%`,
+                    text: `Intervalo de Confianza al ${confianza}% - ${titulo}`,
                     color: textColor,
                     font: { size: 16, weight: 'bold' }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const x = context.parsed.x;
+                            if (x === valor) {
+                                return `μ = ${valor.toFixed(4)}`;
+                            } else if (Math.abs(x - limInf) < 0.01) {
+                                return `Límite Inferior: ${limInf.toFixed(4)}`;
+                            } else if (Math.abs(x - limSup) < 0.01) {
+                                return `Límite Superior: ${limSup.toFixed(4)}`;
+                            }
+                            return `x = ${x.toFixed(4)}`;
+                        }
+                    }
+                },
+                annotation: {
+                    annotations: {
+                        limiteInferior: {
+                            type: 'line',
+                            xMin: limInf,
+                            xMax: limInf,
+                            borderColor: 'rgba(239, 68, 68, 0.8)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            label: {
+                                display: true,
+                                content: `x_α/2 = ${limInf.toFixed(3)}`,
+                                position: 'start',
+                                backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                                color: 'white'
+                            }
+                        },
+                        limiteSuperior: {
+                            type: 'line',
+                            xMin: limSup,
+                            xMax: limSup,
+                            borderColor: 'rgba(239, 68, 68, 0.8)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            label: {
+                                display: true,
+                                content: `x_α/2 = ${limSup.toFixed(3)}`,
+                                position: 'end',
+                                backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                                color: 'white'
+                            }
+                        },
+                        media: {
+                            type: 'line',
+                            xMin: valor,
+                            xMax: valor,
+                            borderColor: 'rgba(139, 92, 246, 1)',
+                            borderWidth: 3,
+                            label: {
+                                display: true,
+                                content: `μ = ${valor.toFixed(3)}`,
+                                position: 'center',
+                                backgroundColor: 'rgba(139, 92, 246, 1)',
+                                color: 'white'
+                            }
+                        }
+                    }
                 }
             },
             scales: {
-                y: {
-                    beginAtZero: false,
-                    min: limInf - margen,
-                    max: limSup + margen,
-                    ticks: { color: textColor },
-                    grid: { color: gridColor },
-                    title: {
-                        display: true,
-                        text: 'Valor',
-                        color: textColor
-                    }
-                },
                 x: {
-                    ticks: { color: textColor },
+                    type: 'linear',
+                    title: { 
+                        display: true, 
+                        text: 'Valor',
+                        color: textColor,
+                        font: { size: 14 }
+                    },
+                    ticks: { 
+                        color: textColor,
+                        callback: function(value) {
+                            return value.toFixed(2);
+                        }
+                    },
+                    grid: { color: gridColor }
+                },
+                y: {
+                    title: { 
+                        display: true, 
+                        text: 'Densidad de Probabilidad',
+                        color: textColor,
+                        font: { size: 14 }
+                    },
+                    ticks: { 
+                        color: textColor,
+                        callback: function(value) {
+                            return value.toFixed(4);
+                        }
+                    },
                     grid: { color: gridColor }
                 }
             }

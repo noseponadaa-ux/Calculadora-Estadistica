@@ -10,8 +10,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     
+    <!-- Sistema de temas (DEBE CARGARSE PRIMERO) -->
+    <script src="theme-toggle.js"></script>
+    
     <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
     
     <!-- SheetJS para importar Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -159,36 +163,33 @@
                 </div>
             </div>
             
-            <p class="section-description">Relación entre una variable dependiente (Y) y varias independientes (X₁, X₂...).</p>
+            <p class="section-description">Relación entre una variable dependiente (Y) y varias independientes (X₁, X₂, X₃...).</p>
 
+            <!-- Selector de número de variables -->
             <div class="form-group">
-                <label for="multiple-x">
-                    <i class="fas fa-table"></i> Matriz X (Variables Independientes):
-                    <span class="tooltip-icon" title="Separa columnas con espacio o coma, y filas con Enter">
+                <label for="num-variables">
+                    <i class="fas fa-hashtag"></i> Número de Variables Independientes (X):
+                </label>
+                <select id="num-variables" onchange="generarTablaVariables()">
+                    <option value="2">2 Variables (X₁, X₂)</option>
+                    <option value="3">3 Variables (X₁, X₂, X₃)</option>
+                    <option value="4">4 Variables (X₁, X₂, X₃, X₄)</option>
+                    <option value="5">5 Variables (X₁, X₂, X₃, X₄, X₅)</option>
+                </select>
+            </div>
+
+            <!-- Contenedor para la tabla de datos -->
+            <div class="form-group">
+                <label>
+                    <i class="fas fa-table"></i> Tabla de Datos:
+                    <span class="tooltip-icon" title="Ingresa los valores en cada columna">
                         <i class="fas fa-info-circle"></i>
                     </span>
                 </label>
-                <p class="helper-text">
-                    Ingresa los datos en columnas. Separa columnas con <strong>espacio</strong> o <strong>coma</strong>,
-                    y filas con <strong>Enter</strong>. <em>No incluyas encabezados.</em>
-                </p>
-                <textarea id="multiple-x" rows="6" placeholder="Ejemplo (X1 X2):
-10  5
-12  6
-15  8
-18  9"></textarea>
-                <button class="btn-import" onclick="importarExcel('multiple-x')">
-                    <i class="fas fa-file-excel"></i> Importar Excel
-                </button>
-            </div>
-
-            <div class="form-group">
-                <label for="multiple-y">
-                    <i class="fas fa-arrows-alt-v"></i> Vector Y (Variable Dependiente):
-                </label>
-                <p class="helper-text">Ingresa los valores de Y en el mismo orden, separados por comas o enter.</p>
-                <textarea id="multiple-y" rows="3" placeholder="Ej: 100, 120, 150, 170"></textarea>
-                <button class="btn-import" onclick="importarExcel('multiple-y')">
+                <div id="tabla-variables-container">
+                    <!-- La tabla se generará dinámicamente aquí -->
+                </div>
+                <button class="btn-import" onclick="importarExcelMultiple()" style="margin-top: 10px;">
                     <i class="fas fa-file-excel"></i> Importar Excel
                 </button>
             </div>
@@ -543,17 +544,90 @@
     <script>
         // Inicialización
         document.addEventListener('DOMContentLoaded', function() {
-            // Cargar tema guardado
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            document.body.setAttribute('data-theme', savedTheme);
-            updateThemeIcon(savedTheme);
-
+            // El tema ya se carga automáticamente desde theme-toggle.js
+            
             // Cargar historial
             cargarHistorial();
 
             // Inicializar tooltips
             initTooltips();
+            
+            // Generar tabla inicial de regresión múltiple
+            generarTablaVariables();
         });
+
+        // ========== FUNCIONES PARA REGRESIÓN MÚLTIPLE ==========
+        function generarTablaVariables() {
+            const numVars = parseInt(document.getElementById('num-variables').value);
+            const container = document.getElementById('tabla-variables-container');
+            
+            let html = `
+                <div class="tabla-multiple">
+                    <table class="tabla-input-multiple">
+                        <thead>
+                            <tr>
+                                <th>#</th>`;
+            
+            // Encabezados X₁, X₂, etc.
+            for (let i = 1; i <= numVars; i++) {
+                html += `<th>X₍${i}₎</th>`;
+            }
+            html += `<th>Y</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-multiple-body">`;
+            
+            // Generar 5 filas iniciales
+            for (let fila = 1; fila <= 5; fila++) {
+                html += `<tr>
+                            <td class="row-number">${fila}</td>`;
+                for (let col = 1; col <= numVars; col++) {
+                    html += `<td><input type="number" step="any" class="input-tabla x-col-${col}" placeholder=""></td>`;
+                }
+                html += `<td><input type="number" step="any" class="input-tabla y-col" placeholder=""></td>
+                        </tr>`;
+            }
+            
+            html += `</tbody>
+                </table>
+                <div style="margin-top: 10px; display: flex; gap: 10px;">
+                    <button class="btn-secondary" onclick="agregarFilaMultiple()">
+                        <i class="fas fa-plus"></i> Agregar Fila
+                    </button>
+                    <button class="btn-secondary" onclick="eliminarFilaMultiple()">
+                        <i class="fas fa-minus"></i> Eliminar Última Fila
+                    </button>
+                </div>
+            </div>`;
+            
+            container.innerHTML = html;
+        }
+
+        function agregarFilaMultiple() {
+            const tbody = document.getElementById('tabla-multiple-body');
+            const numVars = parseInt(document.getElementById('num-variables').value);
+            const filaActual = tbody.children.length + 1;
+            
+            let html = `<tr>
+                        <td class="row-number">${filaActual}</td>`;
+            
+            for (let col = 1; col <= numVars; col++) {
+                html += `<td><input type="number" step="any" class="input-tabla x-col-${col}" placeholder=""></td>`;
+            }
+            html += `<td><input type="number" step="any" class="input-tabla y-col" placeholder=""></td>
+                    </tr>`;
+            
+            tbody.insertAdjacentHTML('beforeend', html);
+        }
+
+        function eliminarFilaMultiple() {
+            const tbody = document.getElementById('tabla-multiple-body');
+            if (tbody.children.length > 1) {
+                tbody.removeChild(tbody.lastChild);
+            } else {
+                mostrarToast('Debe haber al menos una fila', 'warning');
+            }
+        }
 
         function mostrarSeccion(id, element) {
             // Ocultar todas las secciones
@@ -570,7 +644,13 @@
                 element.classList.add('active');
             } else if (element && element.closest('.dropdown')) {
                 // Si es del dropdown, activar el botón del dropdown
-                document.querySelector('.dropbtn').classList.add('active');
+                const dropbtn = document.querySelector('.dropbtn');
+                dropbtn.classList.add('active');
+                
+                // Actualizar el texto del botón desplegable con el nombre de la subsección
+                const icono = element.querySelector('i').className;
+                const texto = element.textContent.trim();
+                dropbtn.innerHTML = `<i class="${icono}"></i> ${texto} ▼`;
             }
         }
 
@@ -596,25 +676,6 @@
         // Función para ir a la teoría
         function irATeoria() {
             window.location.href = 'teoria.html';
-        }
-
-        // Toggle tema
-        function toggleTheme() {
-            const currentTheme = document.body.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.body.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeIcon(newTheme);
-            mostrarToast(`Tema ${newTheme === 'dark' ? 'oscuro' : 'claro'} activado`, 'success');
-        }
-
-        function updateThemeIcon(theme) {
-            const icon = document.querySelector('.theme-toggle i');
-            if (theme === 'dark') {
-                icon.className = 'fas fa-sun';
-            } else {
-                icon.className = 'fas fa-moon';
-            }
         }
 
         // Inicializar tooltips
